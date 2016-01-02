@@ -1247,6 +1247,28 @@ exports.addFunction = function(label, fn)
     createLabel = _createLabel;
 };
 
+exports.reset = function()
+{
+    functions = {};
+
+    currBlocks = [];
+    currLabel;
+    blockCache = {};
+    createLabel = [];
+
+    x = options.x;
+    y = options.y;
+    z = options.z;
+    maxLength = options.length;
+    direction = 5;
+    nextDirection;
+    curr = 1;
+
+    label = exports.jmpLabel = {};
+    cmdBlocks = [];
+    outputBlocks = [];
+};
+
 /*exports.newFunction = function(label)
 {
     functions[currLabel] = currBlocks;
@@ -1425,6 +1447,11 @@ exports.import = function(name, isMain)
             base.unshiftCommand("scoreboard objectives add " + types.Table.tmpScoreName + " dummy MoonCraft temp");
         }
     }
+};
+
+exports.reset = function()
+{
+    cache = [];
 };
 
 (function()
@@ -4403,10 +4430,11 @@ Integer.prototype.operation = function(op, otherName, otherScore, conditional)
 
 Integer.prototype.staticOperation = function(op, val, conditional)
 {
-    if(!options.export && Integer.statics.indexOf(val) == -1)
-        Integer.statics.push(val);
-    else
+    if(options.export)
         command(["scoreboard players set", "static" + val, Integer.scoreName, val].join(" "));
+    else if(Integer.statics.indexOf(val) == -1)
+        Integer.statics.push(val);
+
     this.operation(op, "static" + val.toString(), Integer.scoreName, conditional);
 };
 
@@ -5019,11 +5047,14 @@ window.options = {
 };
 
 var fakeFs = require("fs");
+var base = require("../../MoonCraft/src/lib/base.js");
 var parser = require("../../MoonCraft/src/luaparse.js");
 var baseLib = require("../../MoonCraft/src/lib/baselib.js");
 var compile = require("../../MoonCraft/src/compiler.js");
 var toSchematic = require("../../MoonCraft/src/output/schematic.js");
-var scope = require("../../MoonCraft/src/lib/Scope.js")
+var scope = require("../../MoonCraft/src/lib/Scope.js");
+var naming = require("../../MoonCraft/src/lib/naming.js");
+var types = require("../../MoonCraft/src/lib/types.js");
 GLOBAL.scope = scope;
 
 var oldImport = scope.get("import");
@@ -5046,33 +5077,19 @@ scope.set("import", function(name)
 	}
 });
 
-var moduleCache = arguments[5];
-function clearFromCache(instance)
-{
-	for(var key in moduleCache)
-	{
-		if(moduleCache[key].exports == instance)
-		{
-			delete moduleCache[key];
-			return;
-		}
-	}
-	throw "could not clear instance from module cache";
-}
-
-var base;
 function doIt(cb)
 {
-	if(base)
-		clearFromCache(base);
-	base = require("../../MoonCraft/src/lib/base.js");
-
     try
     {
 		var code = editor.getValue();
 		fakeFs.writeFileSync("demo.lua", code);
 		baseLib.import("demo.lua", true);
 		base.output(cb);
+
+		baseLib.reset();
+		base.reset();
+		naming.names = {};
+		types.Integer.statics = [];
     }
     catch(e)
     {
@@ -5130,7 +5147,7 @@ window.run = {
     }
 };
 
-},{"../../MoonCraft/src/compiler.js":1,"../../MoonCraft/src/lib/Scope.js":2,"../../MoonCraft/src/lib/base.js":3,"../../MoonCraft/src/lib/baselib.js":4,"../../MoonCraft/src/luaparse.js":8,"../../MoonCraft/src/output/schematic.js":10,"../../MoonCraft/stdlib/chat.js":17,"../../MoonCraft/stdlib/query.js":18,"../../MoonCraft/stdlib/title.js":19,"fs":"fs"}],21:[function(require,module,exports){
+},{"../../MoonCraft/src/compiler.js":1,"../../MoonCraft/src/lib/Scope.js":2,"../../MoonCraft/src/lib/base.js":3,"../../MoonCraft/src/lib/baselib.js":4,"../../MoonCraft/src/lib/naming.js":5,"../../MoonCraft/src/lib/types.js":7,"../../MoonCraft/src/luaparse.js":8,"../../MoonCraft/src/output/schematic.js":10,"../../MoonCraft/stdlib/chat.js":17,"../../MoonCraft/stdlib/query.js":18,"../../MoonCraft/stdlib/title.js":19,"fs":"fs"}],21:[function(require,module,exports){
 var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 
 ;(function (exports) {

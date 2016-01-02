@@ -25,11 +25,14 @@ window.options = {
 };
 
 var fakeFs = require("fs");
+var base = require("../../MoonCraft/src/lib/base.js");
 var parser = require("../../MoonCraft/src/luaparse.js");
 var baseLib = require("../../MoonCraft/src/lib/baselib.js");
 var compile = require("../../MoonCraft/src/compiler.js");
 var toSchematic = require("../../MoonCraft/src/output/schematic.js");
-var scope = require("../../MoonCraft/src/lib/Scope.js")
+var scope = require("../../MoonCraft/src/lib/Scope.js");
+var naming = require("../../MoonCraft/src/lib/naming.js");
+var types = require("../../MoonCraft/src/lib/types.js");
 GLOBAL.scope = scope;
 
 var oldImport = scope.get("import");
@@ -52,33 +55,19 @@ scope.set("import", function(name)
 	}
 });
 
-var moduleCache = arguments[5];
-function clearFromCache(instance)
-{
-	for(var key in moduleCache)
-	{
-		if(moduleCache[key].exports == instance)
-		{
-			delete moduleCache[key];
-			return;
-		}
-	}
-	throw "could not clear instance from module cache";
-}
-
-var base;
 function doIt(cb)
 {
-	if(base)
-		clearFromCache(base);
-	base = require("../../MoonCraft/src/lib/base.js");
-
     try
     {
 		var code = editor.getValue();
 		fakeFs.writeFileSync("demo.lua", code);
 		baseLib.import("demo.lua", true);
 		base.output(cb);
+
+		baseLib.reset();
+		base.reset();
+		naming.names = {};
+		types.Integer.statics = [];
     }
     catch(e)
     {
