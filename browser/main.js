@@ -63,16 +63,16 @@ function doIt(cb)
 		fakeFs.writeFileSync("demo.lua", code);
 		baseLib.import("demo.lua", true);
 		base.output(cb);
-
-		baseLib.reset();
-		base.reset();
-		naming.names = {};
-		types.Integer.statics = [];
     }
     catch(e)
     {
         out.innerHTML = e.toString().replace(/\n/g, "<br />");
     }
+
+	baseLib.reset();
+	base.reset();
+	naming.names = {};
+	types.Integer.statics = [];
 }
 
 var downloadA = document.createElement("a");
