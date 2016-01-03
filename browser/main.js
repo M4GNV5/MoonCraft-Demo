@@ -78,6 +78,8 @@ function doIt(cb)
 var downloadA = document.createElement("a");
 document.body.appendChild(downloadA);
 downloadA.style = "display: none";
+var ws;
+
 window.run = {
     showCommands: function()
     {
@@ -121,6 +123,42 @@ window.run = {
     },
     demoServer: function()
     {
-		options.y = 4;
+		if(ws && ws.readyState == 1)
+		{
+			doItRly();
+		}
+		else
+		{
+			ws = new WebSocket("ws://46.38.234.116:6060");
+			ws.onerror = function(err)
+			{
+				out.innerHTML = "Internal error check the console for more information";
+			}
+
+			ws.onopen = doItRly;
+			ws.onclose = function()
+			{
+				ws = false;
+			}
+			ws.onmessage = function(msg)
+			{
+				out.innerHTML = msg.data;
+			}
+		}
+
+
+		function doItRly()
+		{
+			doIt(function(blocks, cmdBlocks)
+			{
+				for(var i = 0; i < blocks.length; i++)
+					blocks[i].y = 4;
+				for(var i = 0; i < cmdBlocks.length; i++)
+					cmdBlocks[i].y = 4;
+
+				var data = JSON.stringify([blocks, cmdBlocks]);
+				ws.send(data);
+			});
+		}
     }
 };
