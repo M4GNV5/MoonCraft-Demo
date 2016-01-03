@@ -5151,7 +5151,7 @@ window.run = {
 		}
 		else
 		{
-			ws = new WebSocket("ws://127.0.0.1:6060");
+			ws = new WebSocket("ws://46.38.234.116:6060");
 			ws.onerror = function(err)
 			{
 				out.innerHTML = "Internal error check the console for more information";
