@@ -123,6 +123,7 @@ window.run = {
     },
     demoServer: function()
     {
+		out.innerHTML = "";
 		if(ws && ws.readyState == 1)
 		{
 			doItRly();
@@ -132,7 +133,7 @@ window.run = {
 			ws = new WebSocket("ws://46.38.234.116:6060");
 			ws.onerror = function(err)
 			{
-				out.innerHTML = "Internal error check the console for more information";
+				out.innerHTML = "Internal error, check the console for more information";
 			}
 
 			ws.onopen = doItRly;
@@ -142,7 +143,7 @@ window.run = {
 			}
 			ws.onmessage = function(msg)
 			{
-				out.innerHTML = msg.data;
+				out.innerHTML += "<pre>" + msg.data + "</pre>";
 			}
 		}
 
@@ -155,6 +156,8 @@ window.run = {
 					blocks[i].y = 4;
 				for(var i = 0; i < cmdBlocks.length; i++)
 					cmdBlocks[i].y = 4;
+
+				blocks.push({x: -1, y: 5, z: 0, tagName: "redstone_block", data: 0});
 
 				var data = JSON.stringify([blocks, cmdBlocks]);
 				ws.send(data);

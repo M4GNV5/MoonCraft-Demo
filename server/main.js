@@ -1,85 +1,104 @@
-const IP = "46.38.234.116";
-const MC_VERSION = "15w51b";
-const IN_USE_MSG = "Someone else or you compiled something within the last 15 seconds.<br />" +
-    "You can take a look at the result by connecting to " + IP + " using Minecraft " + MC_VERSION;
-const TOO_MANY_MSG = "Too many blocks try compiling less code :/";
-const SUCCESS_MSG = "Join " + IP + " using Minecraft " + MC_VERSION + " and click the start button to see the result";
-
+var mc = require('minecraft-protocol');
 var WebSocketServer = require("ws").Server;
-var spawn = require("child_process").spawn;
-var rconOut = require("../../MoonCraft/src/output/rcon.js");
-GLOBAL.options = require("./config.json");
+var rconOut = require("./rcon.js");
 
-var lastRestart;
-var inUse = false;
-var mcServer;
-function restartServer()
+var options = require("./config.json");
+var sockets = {};
+
+var client = mc.createClient({
+    host: options.mc_ip,
+    port: options.mc_port,
+    username: "MoonCraft",
+    version: "1.9"
+});
+client.on('chat', function(packet)
 {
-    console.log("(re)starting minecraft server");
-    if(mcServer && !mcServer.closed)
-        mcServer.kill();
-
-    mcServer = spawn("java", ["-Xmx512M", "-jar", "server.jar", "nogui"]);
-
-    function receive(data)
+    try
     {
-        console.log((data || "").toString().trim());
+        function parseTellraw(obj)
+        {
+            var message = "";
+            if(obj.text)
+                message += obj.text;
+
+            obj.extra.forEach(function(val)
+            {
+                if(typeof val == "string")
+                    message += val;
+                else if(val.text)
+                    message += val.text;
+                else if(val.score)
+                    message += val.score.value;
+            });
+            return message;
+        }
+
+        var msg = JSON.parse(packet.message);
+        var text;
+        if(msg.translate == "chat.type.announcement" || msg.translate == "chat.type.text")
+        {
+            var user = msg.with[0].text;
+            text = "[" + user + "] " + parseTellraw(msg.with[1]);
+        }
+        else
+        {
+            text = parseTellraw(msg);
+        }
+
+        for(var key in sockets)
+        {
+            sockets[key].send(text);
+        }
     }
-    mcServer.stdout.on("data", receive);
-    mcServer.stderr.on("data", receive);
-
-    mcServer.on("close", function()
+    catch(e)
     {
-        console.log("minecraft server closed");
-        mcServer.closed = true;
-        restartServer();
-    });
+        console.log("error sending chat to browsers: " + e);
+    }
+});
 
-    lastRestart = new Date().getTime();
-    setTimeout(restartServer, 60 * 60 * 1000);
+function log(ip, msg)
+{
+    var text = [
+        "[",
+        Date.now(),
+        "] <",
+        ip,
+        ">\t: ",
+        msg
+    ].join("");
+    console.log(text);
 }
-restartServer();
 
 var wss = new WebSocketServer({ port: 6060 });
 wss.on("connection", function(ws)
 {
     var wsIp = ws.upgradeReq.headers['x-forwarded-for'] || ws.upgradeReq.connection.remoteAddress;
-    console.log("new websocket connection from " + wsIp);
+    log(wsIp, "connected");
+    sockets[wsIp] = ws;
 
     ws.on("message", function(raw)
     {
         try
         {
-            if(inUse)
+            var data = JSON.parse(raw);
+            var blocks = data[0];
+            var cmdBlocks = data[1];
+            var blockCount = blocks.length + cmdBlocks.length;
+            if(blockCount > 30)
             {
-                console.log("in use for " + wsIp);
-                ws.send(IN_USE_MSG);
+                log(wsIp, "too many blocks");
+                ws.send(options.msg_toomany);
+                return;
             }
-            else
-            {
-                var data = JSON.parse(raw);
-                var blocks = data[0];
-                var cmdBlocks = data[1];
-                if(blocks.length + cmdBlocks.length > 30)
-                {
-                    ws.send(TOO_MANY_MSG);
-                    console.log("too many blocks for " + wsIp);
-                    return;
-                }
 
-                inUse = true;
-                console.log("compiling for " + wsIp);
-                ws.send(SUCCESS_MSG);
-                rconOut(data[0], data[1]);
-                setTimeout(function()
-                {
-                    inUse = false;
-                }, 15 * 1000);
-            }
+            log(wsIp, "compiling " + blockCount + " commands");
+            ws.send(options.msg_success.replace(/\{count\}/ig, blockCount));
+
+            rconOut(blocks, cmdBlocks, options);
         }
         catch(e)
         {
-            console.log(e.toString());
+            log(wsIp, "/!\\ " + e);
             return;
         }
 
@@ -87,11 +106,13 @@ wss.on("connection", function(ws)
 
     ws.on("error", function(err)
     {
-        console.log("error with " + wsIp + " : " + err);
+        log(wsIp, "websocket error: " + err);
+        delete sockets[wsIp];
     });
 
     ws.on("close", function()
     {
-        console.log("websocket connection closed " + wsIp);
+        log(wsIp, "disconnected");
+        delete sockets[wsIp];
     });
 });

@@ -22,3 +22,8 @@ body
 {
     float: left;
 }
+
+pre
+{
+    margin-bottom: 0px;
+}
