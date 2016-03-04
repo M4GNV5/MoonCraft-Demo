@@ -23,15 +23,18 @@ client.on('chat', function(packet)
             else if(obj.text)
                 message += obj.text;
 
-            obj.extra.forEach(function(val)
+            if(obj.extra instanceof Array)
             {
-                if(typeof val == "string")
-                    message += val;
-                else if(val.text)
-                    message += val.text;
-                else if(val.score)
-                    message += val.score.value;
-            });
+                obj.extra.forEach(function(val)
+                {
+                    if(typeof val == "string")
+                        message += val;
+                    else if(val.text)
+                        message += val.text;
+                    else if(val.score)
+                        message += val.score.value;
+                });
+            }
             return message;
         }
 
