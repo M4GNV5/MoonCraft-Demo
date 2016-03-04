@@ -17,7 +17,7 @@ window.GLOBAL = window;
 window.options = {
     splitterBlock: "stone",
     x: 0,
-    //y: see below
+    y: 4,
     z: 0,
     length: 20,
     debug: false,
@@ -150,13 +150,9 @@ window.run = {
 
 		function doItRly()
 		{
+			options.y = 4;
 			doIt(function(blocks, cmdBlocks)
 			{
-				for(var i = 0; i < blocks.length; i++)
-					blocks[i].y = 4;
-				for(var i = 0; i < cmdBlocks.length; i++)
-					cmdBlocks[i].y = 4;
-
 				blocks.push({x: -1, y: 5, z: 0, tagName: "redstone_block", data: 0});
 
 				var data = JSON.stringify([blocks, cmdBlocks]);
