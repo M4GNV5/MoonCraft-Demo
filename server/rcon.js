@@ -4,16 +4,16 @@ module.exports = function(blocks, cmdblocks, options)
 {
     var cmds = [];
 
-    for(var i = 0; i < blocks.length; i++)
-    {
-        var cmd = ["setblock", blocks[i].x, blocks[i].y, blocks[i].z, blocks[i].tagName, blocks[i].data, "replace"].join(" ");
-        cmds.push(cmd);
-    }
-
     for(var i = 0; i < cmdblocks.length; i++)
     {
         var data = "{Command:" + JSON.stringify(cmdblocks[i].command) + ",auto:1b}";
         var cmd = ["setblock", cmdblocks[i].x, cmdblocks[i].y, cmdblocks[i].z, "chain_command_block", cmdblocks[i].data, "replace", data].join(" ");
+        cmds.push(cmd);
+    }
+
+    for(var i = 0; i < blocks.length; i++)
+    {
+        var cmd = ["setblock", blocks[i].x, blocks[i].y, blocks[i].z, blocks[i].tagName, blocks[i].data, "replace"].join(" ");
         cmds.push(cmd);
     }
 

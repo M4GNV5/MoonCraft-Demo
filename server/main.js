@@ -18,7 +18,9 @@ client.on('chat', function(packet)
         function parseTellraw(obj)
         {
             var message = "";
-            if(obj.text)
+            if(typeof obj == "string")
+                return obj;
+            else if(obj.text)
                 message += obj.text;
 
             obj.extra.forEach(function(val)
