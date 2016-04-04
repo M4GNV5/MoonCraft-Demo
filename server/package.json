@@ -1,6 +1,6 @@
 {
     "dependencies": {
         "ws": "^0.7.2",
-        "minecraft-protocol": "^0.19.4"
+        "minecraft-protocol": "^0.19.6"
     }
 }
