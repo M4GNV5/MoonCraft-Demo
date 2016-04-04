@@ -65,7 +65,7 @@ function log(ip, msg)
 {
     var text = [
         "[",
-        Date.now(),
+        (new Date()).toLocaleString(),
         "] <",
         ip,
         ">\t: ",
@@ -89,7 +89,7 @@ wss.on("connection", function(ws)
             var blocks = data[0];
             var cmdBlocks = data[1];
             var blockCount = blocks.length + cmdBlocks.length;
-            if(blockCount > 30)
+            if(blockCount > options.max_blocks)
             {
                 log(wsIp, "too many blocks");
                 ws.send(options.msg_toomany);
