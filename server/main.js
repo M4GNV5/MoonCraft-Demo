@@ -99,7 +99,11 @@ wss.on("connection", function(ws)
             log(wsIp, "compiling " + blockCount + " commands");
             ws.send(options.msg_success.replace(/\{count\}/ig, blockCount));
 
-            rconOut(blocks, cmdBlocks, options);
+            rconOut(blocks, cmdBlocks, options, function(err)
+            {
+                log(wsIp, "rcon error: " + err);
+                ws.send(options.msg_error.replace(/\{error\}/ig, err));
+            });
         }
         catch(e)
         {

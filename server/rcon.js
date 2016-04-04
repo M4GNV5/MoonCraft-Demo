@@ -1,6 +1,6 @@
 var net = require("net");
 
-module.exports = function(blocks, cmdblocks, options)
+module.exports = function(blocks, cmdblocks, options, errcb)
 {
     var cmds = [];
 
@@ -27,10 +27,10 @@ module.exports = function(blocks, cmdblocks, options)
         var index = 0;
         for(var i = 0; i < count - 1; i++)
         {
-            sendCommands(cmds.slice(index, index + size), options);
+            sendCommands(cmds.slice(index, index + size), options, errcb);
             index += size;
         }
-        sendCommands(cmds.slice(index), options);
+        sendCommands(cmds.slice(index), options, errcb);
     }
     else
     {
@@ -38,21 +38,21 @@ module.exports = function(blocks, cmdblocks, options)
     }
 }
 
-function sendCommands(cmds, options)
+function sendCommands(cmds, options, errcb)
 {
     var rcon = new Rcon(options.rcon_ip, options.rcon_port);
 
     rcon.auth(options.rcon_password, function(err)
     {
         if(err)
-            throw err;
+            return errcb(err);
 
         function next(i)
         {
             rcon.command(cmds[i], function(err, res)
             {
                 if(err)
-                    throw err;
+                    return errcb(err);
 
                 if(res == "An unknown error occurred while attempting to perform this command") //minecraft is weird sometimes
                 {
