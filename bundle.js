@@ -5098,14 +5098,27 @@ function doIt(cb)
 	types.Integer.statics = [];
 }
 
+var currentMode;
+
 var downloadA = document.createElement("a");
 document.body.appendChild(downloadA);
 downloadA.style = "display: none";
-var ws;
+
+var ws = new WebSocket("ws:/127.0.0.1:6060");//46.38.234.116
+ws.onopen = function()
+{
+	document.getElementById("runBtn").style = "";
+};
+ws.onmessage = function(msg)
+{
+	if(currentMode == "run")
+		out.innerHTML += "<pre>" + msg.data + "</pre>";
+};
 
 window.run = {
     showCommands: function()
     {
+		currentMode = "show";
         options.y = 0;
         doIt(function(blocks, cmdBlocks)
         {
@@ -5123,6 +5136,7 @@ window.run = {
     },
     schematic: function()
     {
+		currentMode = "schematic";
 		options.y = 0;
 		doIt(function(blocks, cmdBlocks)
         {
@@ -5146,42 +5160,16 @@ window.run = {
     },
     demoServer: function()
     {
+		currentMode = "run";
 		out.innerHTML = "";
-		if(ws && ws.readyState == 1)
+		options.y = 4;
+		doIt(function(blocks, cmdBlocks)
 		{
-			doItRly();
-		}
-		else
-		{
-			ws = new WebSocket("ws://46.38.234.116:6060");
-			ws.onerror = function(err)
-			{
-				out.innerHTML = "Internal error, check the console for more information";
-			}
+			blocks.push({x: -1, y: 5, z: 0, tagName: "redstone_block", data: 0});
 
-			ws.onopen = doItRly;
-			ws.onclose = function()
-			{
-				ws = false;
-			}
-			ws.onmessage = function(msg)
-			{
-				out.innerHTML += "<pre>" + msg.data + "</pre>";
-			}
-		}
-
-
-		function doItRly()
-		{
-			options.y = 4;
-			doIt(function(blocks, cmdBlocks)
-			{
-				blocks.push({x: -1, y: 5, z: 0, tagName: "redstone_block", data: 0});
-
-				var data = JSON.stringify([blocks, cmdBlocks]);
-				ws.send(data);
-			});
-		}
+			var data = JSON.stringify([blocks, cmdBlocks]);
+			ws.send(data);
+		});
     }
 };
 
