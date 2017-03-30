@@ -5104,7 +5104,7 @@ var downloadA = document.createElement("a");
 document.body.appendChild(downloadA);
 downloadA.style = "display: none";
 
-var ws = new WebSocket("ws:/46.38.234.116:6060");
+var ws = new WebSocket("wss://46.38.234.116:6060");
 ws.onopen = function()
 {
 	document.getElementById("runBtn").style = "";
